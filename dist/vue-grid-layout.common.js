@@ -1,4 +1,4 @@
-/*! vue-grid-layout - 2.3.11 | (c) 2015, 2020  Gustavo Santos (JBay Solutions) <gustavo.santos@jbaysolutions.com> (http://www.jbaysolutions.com) | https://github.com/jbaysolutions/vue-grid-layout */
+/*! vue-grid-layout - 2.3.11 | (c) 2015, 2021  Gustavo Santos (JBay Solutions) <gustavo.santos@jbaysolutions.com> (http://www.jbaysolutions.com) | https://github.com/jbaysolutions/vue-grid-layout */
 module.exports =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1018,7 +1018,12 @@ function normalizeComponent (
     options._ssrRegister = hook
   } else if (injectStyles) {
     hook = shadowMode
-      ? function () { injectStyles.call(this, this.$root.$options.shadowRoot) }
+      ? function () {
+        injectStyles.call(
+          this,
+          (options.functional ? this.parent : this).$root.$options.shadowRoot
+        )
+      }
       : injectStyles
   }
 
@@ -1027,7 +1032,7 @@ function normalizeComponent (
       // for template-only hot-reload because in that case the render fn doesn't
       // go through the normalizer
       options._injectStyles = hook
-      // register for functioal component in vue file
+      // register for functional component in vue file
       var originalRender = options.render
       options.render = function renderWithStyleInjection (h, context) {
         hook.call(context)
@@ -1326,12 +1331,12 @@ module.exports = __webpack_require__("8e60") ? function (object, key, value) {
 
 "use strict";
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"64400f47-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/GridLayout.vue?vue&type=template&id=27b36423&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"82b2f52c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/GridLayout.vue?vue&type=template&id=0e4e1490&
 var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"item",staticClass:"vue-grid-layout",style:(_vm.mergedStyle)},[_vm._t("default"),_c('grid-item',{directives:[{name:"show",rawName:"v-show",value:(_vm.isDragging),expression:"isDragging"}],staticClass:"vue-grid-placeholder",attrs:{"x":_vm.placeholder.x,"y":_vm.placeholder.y,"w":_vm.placeholder.w,"h":_vm.placeholder.h,"i":_vm.placeholder.i}})],2)}
 var staticRenderFns = []
 
 
-// CONCATENATED MODULE: ./src/components/GridLayout.vue?vue&type=template&id=27b36423&
+// CONCATENATED MODULE: ./src/components/GridLayout.vue?vue&type=template&id=0e4e1490&
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es7.object.get-own-property-descriptors.js
 var es7_object_get_own_property_descriptors = __webpack_require__("8e6e");
@@ -1402,7 +1407,7 @@ var DOM = __webpack_require__("1ca7");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 //
 //
@@ -1475,6 +1480,10 @@ var elementResizeDetectorMaker = __webpack_require__("eec4");
       default: true
     },
     isMirrored: {
+      type: Boolean,
+      default: false
+    },
+    isBounded: {
       type: Boolean,
       default: false
     },
@@ -1577,7 +1586,10 @@ var elementResizeDetectorMaker = __webpack_require__("eec4");
     this.eventBus.$off('dragEvent', this.dragEventHandler);
     this.eventBus.$destroy();
     Object(DOM["c" /* removeWindowEventListener */])("resize", this.onWindowResize);
-    this.erd.uninstall(this.$refs.item);
+
+    if (this.erd) {
+      this.erd.uninstall(this.$refs.item);
+    }
   },
   beforeMount: function beforeMount() {
     this.$emit('layout-before-mount', this.layout);
@@ -1660,6 +1672,9 @@ var elementResizeDetectorMaker = __webpack_require__("eec4");
     },
     isResizable: function isResizable() {
       this.eventBus.$emit("setResizable", this.isResizable);
+    },
+    isBounded: function isBounded() {
+      this.eventBus.$emit("setBounded", this.isBounded);
     },
     responsive: function responsive() {
       if (!this.responsive) {
@@ -1774,7 +1789,7 @@ var elementResizeDetectorMaker = __webpack_require__("eec4");
       var hasCollisions;
 
       if (this.preventCollision) {
-        var collisions = Object(utils["e" /* getAllCollisions */])(this.layout, _objectSpread({}, l, {
+        var collisions = Object(utils["e" /* getAllCollisions */])(this.layout, _objectSpread(_objectSpread({}, l), {}, {
           w: w,
           h: h
         })).filter(function (layoutItem) {
@@ -2059,7 +2074,11 @@ __webpack_require__("214f")('match', 1, function (defined, MATCH, $match, maybeC
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, "default", function() { return /* binding */ addStylesClient; });
 
 // CONCATENATED MODULE: ./node_modules/vue-style-loader/lib/listToStyles.js
 /**
@@ -2091,7 +2110,6 @@ function listToStyles (parentId, list) {
 }
 
 // CONCATENATED MODULE: ./node_modules/vue-style-loader/lib/addStylesClient.js
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return addStylesClient; });
 /*
   MIT License http://www.opensource.org/licenses/mit-license.php
   Author Tobias Koppers @sokra
@@ -2563,7 +2581,7 @@ var store = global[SHARED] || (global[SHARED] = {});
 })('versions', []).push({
   version: core.version,
   mode: __webpack_require__("2d00") ? 'pure' : 'global',
-  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+  copyright: '© 2020 Denis Pushkarev (zloirock.ru)'
 });
 
 
@@ -2603,7 +2621,7 @@ $export($export.P + $export.F * (fails(function () {
 /***/ "584a":
 /***/ (function(module, exports) {
 
-var core = module.exports = { version: '2.6.10' };
+var core = module.exports = { version: '2.6.12' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 
@@ -2742,7 +2760,7 @@ module.exports = function (that, target, C) {
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridItem_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("6e21");
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridItem_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridItem_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0__);
 /* unused harmony reexport * */
- /* unused harmony default export */ var _unused_webpack_default_export = (_node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridItem_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
+
 
 /***/ }),
 
@@ -3092,7 +3110,7 @@ NAME in FProto || __webpack_require__("9e1e") && dP(FProto, NAME, {
 /***/ "8378":
 /***/ (function(module, exports) {
 
-var core = module.exports = { version: '2.6.10' };
+var core = module.exports = { version: '2.6.12' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 
@@ -4636,21 +4654,26 @@ utils.forEach = function(collection, callback) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+
+// NAMESPACE OBJECT: ./node_modules/@interactjs/snappers/all.js
 var all_namespaceObject = {};
 __webpack_require__.r(all_namespaceObject);
 __webpack_require__.d(all_namespaceObject, "edgeTarget", function() { return edgeTarget; });
 __webpack_require__.d(all_namespaceObject, "elements", function() { return snappers_elements; });
 __webpack_require__.d(all_namespaceObject, "grid", function() { return grid; });
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"64400f47-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/GridItem.vue?vue&type=template&id=5a90b5a5&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"82b2f52c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/GridItem.vue?vue&type=template&id=aaca4818&
 var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"item",staticClass:"vue-grid-item",class:_vm.classObj,style:(_vm.style)},[_vm._t("default"),(_vm.resizableAndNotStatic)?_c('span',{ref:"handle",class:_vm.resizableHandleClass}):_vm._e()],2)}
 var staticRenderFns = []
 
 
-// CONCATENATED MODULE: ./src/components/GridItem.vue?vue&type=template&id=5a90b5a5&
+// CONCATENATED MODULE: ./src/components/GridItem.vue?vue&type=template&id=aaca4818&
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.regexp.replace.js
 var es6_regexp_replace = __webpack_require__("a481");
+
+// EXTERNAL MODULE: ./node_modules/core-js/modules/es6.number.is-finite.js
+var es6_number_is_finite = __webpack_require__("fca0");
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.regexp.match.js
 var es6_regexp_match = __webpack_require__("4917");
@@ -4966,7 +4989,7 @@ function raf_init(window) {
   if (!request) {
     request = callback => {
       const currTime = Date.now();
-      const timeToCall = Math.max(0, 16 - (currTime - lastTime)); // eslint-disable-next-line standard/no-callback-literal
+      const timeToCall = Math.max(0, 16 - (currTime - lastTime)); // eslint-disable-next-line node/no-callback-literal
 
       const token = window.setTimeout(() => {
         callback(currTime + timeToCall);
@@ -5491,7 +5514,6 @@ const defaultOptions_defaults = {
 
 
 class InteractEvent_InteractEvent extends BaseEvent {
-  // drag
   // resize
 
   /** */
@@ -5523,8 +5545,6 @@ class InteractEvent_InteractEvent extends BaseEvent {
     this.speed = void 0;
     this.swipe = void 0;
     this.timeStamp = void 0;
-    this.dragEnter = void 0;
-    this.dragLeave = void 0;
     this.axes = void 0;
     this.preEnd = void 0;
     element = element || interaction.element;
@@ -5850,7 +5870,7 @@ class Interactable_Interactable {
    * overridden using {@link Interactable.rectChecker}.
    *
    * @param {Element} [element] The element to measure.
-   * @return {Interact.Rect} The object's bounding rectangle.
+   * @return {Rect} The object's bounding rectangle.
    */
 
 
@@ -6530,6 +6550,7 @@ function coordsToEvent(coords) {
 
 
 
+
 function install(scope) {
   const targets = [];
   const delegatedEvents = {};
@@ -6799,8 +6820,29 @@ function getOptions(param) {
   install
 });
 //# sourceMappingURL=events.js.map
+// CONCATENATED MODULE: ./node_modules/@interactjs/utils/misc.js
+
+function warnOnce(method, message) {
+  let warned = false;
+  return function () {
+    if (!warned) {
+      win.console.warn(message);
+      warned = true;
+    }
+
+    return method.apply(this, arguments);
+  };
+}
+function copyAction(dest, src) {
+  dest.name = src.name;
+  dest.axis = src.axis;
+  dest.edges = src.edges;
+  return dest;
+}
+//# sourceMappingURL=misc.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/core/interactStatic.js
 /** @module interact */
+
 
 
 
@@ -6854,16 +6896,13 @@ function createInteractStatic(scope) {
   interact.closest = domUtils_closest;
   interact.globalEvents = {}; // eslint-disable-next-line no-undef
 
-  interact.version = "1.10.0";
+  interact.version = "1.10.2";
   interact.scope = scope;
   /**
   * Use a plugin
   *
   * @alias module:interact.use
   *
-  * @param {Object} plugin
-  * @param {function} plugin.install
-  * @return {Interact.InteractStatic}
    */
 
   interact.use = function (plugin, options) {
@@ -6876,7 +6915,8 @@ function createInteractStatic(scope) {
    *
    * @alias module:interact.isSet
    *
-   * @param {Element} element The Element being searched for
+   * @param {Target} target The Element or string being searched for
+   * @param {object} options
    * @return {boolean} Indicates if the element or CSS selector was previously
    * passed to interact
    */
@@ -6886,6 +6926,7 @@ function createInteractStatic(scope) {
     return !!this.scope.interactables.get(target, options && options.context);
   };
   /**
+   * @deprecated
    * Add a global listener for an InteractEvent or adds a DOM event to `document`
    *
    * @alias module:interact.on
@@ -6898,7 +6939,7 @@ function createInteractStatic(scope) {
    */
 
 
-  interact.on = function (type, listener, options) {
+  interact.on = warnOnce(function on(type, listener, options) {
     if (is.string(type) && type.search(' ') !== -1) {
       type = type.trim().split(/ +/);
     }
@@ -6935,8 +6976,9 @@ function createInteractStatic(scope) {
       }
 
     return this;
-  };
+  }, 'The interact.on() method is being deprecated');
   /**
+   * @deprecated
    * Removes a global InteractEvent listener or DOM event from `document`
    *
    * @alias module:interact.off
@@ -6949,8 +6991,7 @@ function createInteractStatic(scope) {
    * @return {object} interact
    */
 
-
-  interact.off = function (type, listener, options) {
+  interact.off = warnOnce(function off(type, listener, options) {
     if (is.string(type) && type.search(' ') !== -1) {
       type = type.trim().split(/ +/);
     }
@@ -6982,7 +7023,7 @@ function createInteractStatic(scope) {
     }
 
     return this;
-  };
+  }, 'The interact.off() method is being deprecated');
 
   interact.debug = function () {
     return this.scope;
@@ -7054,26 +7095,6 @@ function createInteractStatic(scope) {
   return interact;
 }
 //# sourceMappingURL=interactStatic.js.map
-// CONCATENATED MODULE: ./node_modules/@interactjs/utils/misc.js
-
-function warnOnce(method, message) {
-  let warned = false;
-  return function () {
-    if (!warned) {
-      win.console.warn(message);
-      warned = true;
-    }
-
-    return method.apply(this, arguments);
-  };
-}
-function copyAction(dest, src) {
-  dest.name = src.name;
-  dest.axis = src.axis;
-  dest.edges = src.edges;
-  return dest;
-}
-//# sourceMappingURL=misc.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/core/PointerInfo.js
 class PointerInfo {
   constructor(id, pointer, event, downTime, downTarget) {
@@ -7618,6 +7639,7 @@ class Interaction_Interaction {
 
 
 
+
 function preventDefault(newValue) {
   if (/^(always|never|auto)$/.test(newValue)) {
     this.options.preventDefault = newValue;
@@ -7871,6 +7893,7 @@ function hasPointerId(interaction, pointerId) {
 /* harmony default export */ var interactionFinder = (finder);
 //# sourceMappingURL=interactionFinder.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/core/interactions.js
+
 
 
 
@@ -8397,6 +8420,7 @@ if (typeof window === 'object' && !!window) {
 
 
 
+
 function InteractableMethods_install(scope) {
   const {
     /** @lends Interactable */
@@ -8568,6 +8592,7 @@ function actionChecker(checker) {
 });
 //# sourceMappingURL=InteractableMethods.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/auto-start/base.js
+
 
 
 
@@ -8967,6 +8992,7 @@ function checkStartAxis(startAxis, interactable) {
 // CONCATENATED MODULE: ./node_modules/@interactjs/auto-start/hold.js
 
 
+
 function hold_install(scope) {
   const {
     defaults
@@ -8987,7 +9013,7 @@ function getHoldDuration(interaction) {
   return options[actionName].hold || options[actionName].delay;
 }
 
-/* harmony default export */ var hold = ({
+const hold = {
   id: 'auto-start/hold',
   install: hold_install,
   listeners: {
@@ -9020,15 +9046,16 @@ function getHoldDuration(interaction) {
     'autoStart:before-start': ({
       interaction
     }) => {
-      const hold = getHoldDuration(interaction);
+      const holdDuration = getHoldDuration(interaction);
 
-      if (hold > 0) {
+      if (holdDuration > 0) {
         interaction.prepared.name = null;
       }
     }
   },
   getHoldDuration
-});
+};
+/* harmony default export */ var auto_start_hold = (hold);
 //# sourceMappingURL=hold.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/auto-start/plugin.js
 
@@ -9039,7 +9066,7 @@ function getHoldDuration(interaction) {
 
   install(scope) {
     scope.usePlugin(base);
-    scope.usePlugin(hold);
+    scope.usePlugin(auto_start_hold);
     scope.usePlugin(dragAxis);
   }
 
@@ -9052,17 +9079,12 @@ function getHoldDuration(interaction) {
 
 if (typeof window === 'object' && !!window) {
   interact_init(window);
-} // eslint-disable-next-line no-undef
-
-
-if (( true) && !_interactjs_interact.__warnedUseImport) {
-  _interactjs_interact.__warnedUseImport = true;
-  console.warn('[interact.js] The "@interactjs/*/index" packages are not quite stable yet. Use them with caution.');
 }
 
 _interactjs_interact.use(auto_start_plugin);
 //# sourceMappingURL=index.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/actions/drag/plugin.js
+
 
 
 function plugin_install(scope) {
@@ -9232,17 +9254,12 @@ const drag = {
 
 if (typeof window === 'object' && !!window) {
   interact_init(window);
-} // eslint-disable-next-line no-undef
-
-
-if (( true) && !_interactjs_interact.__warnedUseImport) {
-  _interactjs_interact.__warnedUseImport = true;
-  console.warn('[interact.js] The "@interactjs/*/index" packages are not quite stable yet. Use them with caution.');
 }
 
 _interactjs_interact.use(drag_plugin);
 //# sourceMappingURL=index.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/actions/resize/plugin.js
+
 
 
 
@@ -9459,6 +9476,8 @@ function checkResizeEdge(name, value, page, element, interactableElement, rect, 
   ? value === element // otherwise check if element matches value as selector
   : matchesUpTo(element, value, interactableElement);
 }
+/* eslint-disable multiline-ternary */
+
 
 function initCursors(browser) {
   return browser.isIe9 ? {
@@ -9487,6 +9506,8 @@ function initCursors(browser) {
     bottomleft: 'nesw-resize'
   };
 }
+/* eslint-enable multiline-ternary */
+
 
 function start({
   iEvent,
@@ -9527,8 +9548,7 @@ function plugin_move({
   const resizeEvent = iEvent;
   const resizeOptions = interaction.interactable.options.resize;
   const invert = resizeOptions.invert;
-  const invertible = invert === 'reposition' || invert === 'negate'; // eslint-disable-next-line no-shadow
-
+  const invertible = invert === 'reposition' || invert === 'negate';
   const current = interaction.rect;
   const {
     start: startRect,
@@ -9696,12 +9716,6 @@ const resize = {
 
 if (typeof window === 'object' && !!window) {
   interact_init(window);
-} // eslint-disable-next-line no-undef
-
-
-if (( true) && !_interactjs_interact.__warnedUseImport) {
-  _interactjs_interact.__warnedUseImport = true;
-  console.warn('[interact.js] The "@interactjs/*/index" packages are not quite stable yet. Use them with caution.');
 }
 
 _interactjs_interact.use(resize_plugin);
@@ -10169,6 +10183,8 @@ function getRectOffset(rect, coords) {
 //# sourceMappingURL=Modification.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/modifiers/base.js
 
+
+
 function makeModifier(module, name) {
   const {
     defaults
@@ -10269,7 +10285,7 @@ const modifiersBase = {
  * interact(target).resizable({
  *   modifiers: [
  *     interact.modifiers.snapSize({
- *       targets: [ interact.createSnapGrid({ x: 20, y: 20 }) ],
+ *       targets: [ interact.snappers.grid({ x: 20, y: 20 }) ],
  *     }),
  *     interact.aspectRatio({ ratio: 'preserve' }),
  *   ],
@@ -11134,18 +11150,13 @@ const plugin_modifiers = {
 
 if (typeof window === 'object' && !!window) {
   interact_init(window);
-} // eslint-disable-next-line no-undef
-
-
-if (( true) && !_interactjs_interact.__warnedUseImport) {
-  _interactjs_interact.__warnedUseImport = true;
-  console.warn('[interact.js] The "@interactjs/*/index" packages are not quite stable yet. Use them with caution.');
 }
 
 _interactjs_interact.use(modifiers_plugin);
 //# sourceMappingURL=index.js.map
 // CONCATENATED MODULE: ./node_modules/@interactjs/dev-tools/plugin.js
 /* eslint-disable no-console */
+
 
 
 
@@ -11292,17 +11303,12 @@ const defaultExport = isProduction ? {
 
 if (typeof window === 'object' && !!window) {
   interact_init(window);
-} // eslint-disable-next-line no-undef
-
-
-if (( true) && !_interactjs_interact.__warnedUseImport) {
-  _interactjs_interact.__warnedUseImport = true;
-  console.warn('[interact.js] The "@interactjs/*/index" packages are not quite stable yet. Use them with caution.');
 }
 
 _interactjs_interact.use(dev_tools_plugin);
 //# sourceMappingURL=index.js.map
 // CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/GridItem.vue?vue&type=script&lang=js&
+
 
 
 
@@ -11438,6 +11444,11 @@ _interactjs_interact.use(dev_tools_plugin);
       required: false,
       default: null
     },
+    isBounded: {
+      type: Boolean,
+      required: false,
+      default: null
+    },
 
     /*useCssTransforms: {
      type: Boolean,
@@ -11563,6 +11574,12 @@ _interactjs_interact.use(dev_tools_plugin);
       }
     };
 
+    self.setBoundedHandler = function (isBounded) {
+      if (self.isBounded === null) {
+        self.bounded = isBounded;
+      }
+    };
+
     self.setRowHeightHandler = function (rowHeight) {
       self.rowHeight = rowHeight;
     };
@@ -11585,6 +11602,7 @@ _interactjs_interact.use(dev_tools_plugin);
     this.eventBus.$on('compact', self.compactHandler);
     this.eventBus.$on('setDraggable', self.setDraggableHandler);
     this.eventBus.$on('setResizable', self.setResizableHandler);
+    this.eventBus.$on('setBounded', self.setBoundedHandler);
     this.eventBus.$on('setRowHeight', self.setRowHeightHandler);
     this.eventBus.$on('setMaxRows', self.setMaxRowsHandler);
     this.eventBus.$on('directionchange', self.directionchangeHandler);
@@ -11598,6 +11616,7 @@ _interactjs_interact.use(dev_tools_plugin);
     this.eventBus.$off('compact', self.compactHandler);
     this.eventBus.$off('setDraggable', self.setDraggableHandler);
     this.eventBus.$off('setResizable', self.setResizableHandler);
+    this.eventBus.$off('setBounded', self.setBoundedHandler);
     this.eventBus.$off('setRowHeight', self.setRowHeightHandler);
     this.eventBus.$off('setMaxRows', self.setMaxRowsHandler);
     this.eventBus.$off('directionchange', self.directionchangeHandler);
@@ -11631,6 +11650,12 @@ _interactjs_interact.use(dev_tools_plugin);
       this.resizable = this.isResizable;
     }
 
+    if (this.isBounded === null) {
+      this.bounded = this.layout.isBounded;
+    } else {
+      this.bounded = this.isBounded;
+    }
+
     this.useCssTransforms = this.layout.useCssTransforms;
     this.useStyleCursor = this.layout.useStyleCursor;
     this.createStyle();
@@ -11648,6 +11673,9 @@ _interactjs_interact.use(dev_tools_plugin);
     },
     isResizable: function isResizable() {
       this.resizable = this.isResizable;
+    },
+    isBounded: function isBounded() {
+      this.bounded = this.isBounded;
     },
     resizable: function resizable() {
       this.tryMakeResizable();
@@ -11973,9 +12001,18 @@ _interactjs_interact.use(dev_tools_plugin);
               newPosition.left = this.dragging.left + coreEvent.deltaX;
             }
 
-            newPosition.top = this.dragging.top + coreEvent.deltaY; //                        console.log("### drag => " + event.type + ", x=" + x + ", y=" + y);
+            newPosition.top = this.dragging.top + coreEvent.deltaY;
+
+            if (this.bounded) {
+              var bottomBoundary = event.target.offsetParent.clientHeight - this.calcGridItemWHPx(this.h, this.rowHeight, this.margin[1]);
+              newPosition.top = this.clamp(newPosition.top, 0, bottomBoundary);
+              var colWidth = this.calcColWidth();
+              var rightBoundary = this.containerWidth - this.calcGridItemWHPx(this.w, colWidth, this.margin[0]);
+              newPosition.left = this.clamp(newPosition.left, 0, rightBoundary);
+            } //                        console.log("### drag => " + event.type + ", x=" + x + ", y=" + y);
             //                        console.log("### drag => " + event.type + ", deltaX=" + coreEvent.deltaX + ", deltaY=" + coreEvent.deltaY);
             //                        console.log("### drag end => " + JSON.stringify(newPosition));
+
 
             this.dragging = newPosition;
             break;
@@ -12065,6 +12102,19 @@ _interactjs_interact.use(dev_tools_plugin);
       var colWidth = (this.containerWidth - this.margin[0] * (this.cols + 1)) / this.cols; // console.log("### COLS=" + this.cols + " COL WIDTH=" + colWidth + " MARGIN " + this.margin[0]);
 
       return colWidth;
+    },
+    // This can either be called:
+    // calcGridItemWHPx(w, colWidth, margin[0])
+    // or
+    // calcGridItemWHPx(h, rowHeight, margin[1])
+    calcGridItemWHPx: function calcGridItemWHPx(gridUnits, colOrRowSize, marginPx) {
+      // 0 * Infinity === NaN, which causes problems with resize contraints
+      if (!Number.isFinite(gridUnits)) return gridUnits;
+      return Math.round(colOrRowSize * gridUnits + Math.max(0, gridUnits - 1) * marginPx);
+    },
+    // Similar to _.clamp
+    clamp: function clamp(num, lowerBound, upperBound) {
+      return Math.max(Math.min(num, upperBound), lowerBound);
     },
 
     /**
@@ -13446,7 +13496,7 @@ module.exports = (
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridLayout_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("1156");
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridLayout_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridLayout_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0__);
 /* unused harmony reexport * */
- /* unused harmony default export */ var _unused_webpack_default_export = (_node_modules_vue_style_loader_index_js_ref_6_oneOf_1_0_node_modules_css_loader_index_js_ref_6_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_2_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_node_modules_cache_loader_dist_cjs_js_ref_0_0_node_modules_vue_loader_lib_index_js_vue_loader_options_GridLayout_vue_vue_type_style_index_0_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
+
 
 /***/ }),
 
@@ -13912,7 +13962,13 @@ module.exports = document && document.documentElement;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, "install", function() { return /* reexport */ components["d" /* install */]; });
+__webpack_require__.d(__webpack_exports__, "GridLayout", function() { return /* reexport */ components["b" /* GridLayout */]; });
+__webpack_require__.d(__webpack_exports__, "GridItem", function() { return /* reexport */ components["a" /* GridItem */]; });
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/setPublicPath.js
 // This file is imported into lib/wc client bundles.
@@ -13935,9 +13991,6 @@ if (typeof window !== 'undefined') {
 var components = __webpack_require__("2af9");
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/entry-lib.js
-/* concated harmony reexport install */__webpack_require__.d(__webpack_exports__, "install", function() { return components["d" /* install */]; });
-/* concated harmony reexport GridLayout */__webpack_require__.d(__webpack_exports__, "GridLayout", function() { return components["b" /* GridLayout */]; });
-/* concated harmony reexport GridItem */__webpack_require__.d(__webpack_exports__, "GridItem", function() { return components["a" /* GridItem */]; });
 
 
 /* harmony default export */ var entry_lib = __webpack_exports__["default"] = (components["c" /* default */]);
